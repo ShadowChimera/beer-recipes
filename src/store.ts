@@ -113,7 +113,7 @@ const useStore = create<StoreState>((set, get) => ({
           maxIndex: data.length,
         },
       };
-          }
+    }
 
     renderedItems = data.slice(renderRange.start.index, renderRange.end.index);
 
@@ -126,7 +126,7 @@ const useStore = create<StoreState>((set, get) => ({
 
     renderedItems = [...renderedItems, ...passedData];
 
-      set({ renderRange, renderedItems });
+    set({ renderRange, renderedItems });
   },
 
   pushRender: async (direction) => {
@@ -493,7 +493,7 @@ const adjustRangeItem: (
 
     rangeItem.index = isOverflowStart
       ? data.length + rangeItem.index
-      : rangeItem.index - data.length;
+      : rangeItem.index - rangeItem.maxIndex!;
     rangeItem.maxIndex = data.length;
     rangeItem.page = newPage;
 
