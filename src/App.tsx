@@ -20,7 +20,9 @@ function App() {
         <BeerRecipePage id={openedRecipeId} onClose={handleRecipeClose} />
       )}
       <div
-        className={classNames({ 'overflow-hidden': openedRecipeId !== null })}
+        className={classNames({
+          'overflow-hidden relative z-[1]': openedRecipeId !== null,
+        })}
       >
         <RecipesList onRecipeOpen={handleRecipeOpen} />
       </div>
