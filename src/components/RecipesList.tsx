@@ -15,23 +15,28 @@ const RecipesList = () => {
     state.renderPartSize,
   ]);
 
-  const [fetchData, renderItems, pushRenderForward, pushRenderBack] = useStore(
-    (state) => [
-      state.fetchData,
-      state.renderItems,
-      state.pushRenderForward,
-      state.pushRenderBack,
-    ]
-  );
+  const [
+    fetchData,
+    renderItems,
+    pushRenderForward,
+    pushRenderBack,
+    removeItems,
+  ] = useStore((state) => [
+    state.fetchData,
+    state.renderItems,
+    state.pushRenderForward,
+    state.pushRenderBack,
+    state.removeItems,
+  ]);
 
   const firstElementRef = useScrollObservation(
     () => void onScrollUp(),
-    [isLoading]
+    [isLoading, renderedItems, isStart]
   );
 
   const lastElementRef = useScrollObservation(
     () => void onScrollDown(),
-    [isLoading]
+    [isLoading, renderedItems, isEnd]
   );
 
   useEffect(() => {
@@ -51,8 +56,6 @@ const RecipesList = () => {
       return;
     }
 
-    console.log('scrolled to up');
-
     setIsLoading(true);
     setIsEnd(false);
     setIsStart(await pushRenderBack());
@@ -63,8 +66,6 @@ const RecipesList = () => {
     if (isLoading || isEnd) {
       return;
     }
-
-    console.log('scrolled to down');
 
     setIsLoading(true);
     setIsStart(false);
@@ -89,19 +90,24 @@ const RecipesList = () => {
   };
 
   const handleRemoveItems = async () => {
-    return;
+    setIsLoading(true);
+    setSelectedItemsIds([]);
+    await removeItems(selectedItemsIds);
+    setIsLoading(false);
   };
 
   return (
     <div>
-      <div
-        className={classNames(
-          'fixed inset-x-0 top-0 z-50 flex justify-between p-4 bg-white shadow-md'
-        )}
-      >
-        <span>Selected items count: {selectedItemsIds.length}</span>
-        <button onClick={() => void handleRemoveItems()}>Remove</button>
-      </div>
+      {selectedItemsIds.length !== 0 && (
+        <div
+          className={classNames(
+            'fixed inset-x-0 top-0 z-50 flex justify-between p-4 bg-white shadow-md'
+          )}
+        >
+          <span>Selected items count: {selectedItemsIds.length}</span>
+          <button onClick={() => void handleRemoveItems()}>Remove</button>
+        </div>
+      )}
       {renderedItems.map((item, index) => {
         let ref;
 

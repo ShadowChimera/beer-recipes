@@ -29,6 +29,7 @@ export interface StoreState {
   pushRenderForward: () => Promise<boolean>;
   pushRenderBack: () => Promise<boolean>;
   pushRender: (direction: 'forward' | 'back') => Promise<boolean>;
+  removeItems: (itemsIds: number[]) => Promise<void>;
 }
 
 const useStore = create<StoreState>((set, get) => ({
@@ -54,12 +55,20 @@ const useStore = create<StoreState>((set, get) => ({
   fetchDataWithoutUpdate: async (page) => {
     page = page ?? get().page;
 
-    if (page === get().page && get().data) {
-      return get().data;
+    let data = get().data;
+
+    if (page !== get().page || !get().data) {
+      data = await getRecipesData(page);
     }
 
-    const data = await getRecipesData(page);
-    return data;
+    const removedItemsIds = get().removedItemsIds;
+
+    return (
+      data &&
+      data.filter(
+        (item) => !removedItemsIds.find((removedId) => removedId === item.id)
+      )
+    );
   },
 
   setRenderSize: (renderSize) => {
@@ -179,6 +188,142 @@ const useStore = create<StoreState>((set, get) => ({
   },
   pushRenderBack: async () => {
     return await get().pushRender('back');
+  },
+
+  removeItems: async (itemsIds) => {
+    if (!itemsIds.length) {
+      return;
+    }
+
+    const removedItemsIds = [...get().removedItemsIds, ...itemsIds];
+
+    let renderedItems = get().renderedItems;
+    const lastItem = renderedItems[renderedItems.length - 1];
+    const data = await get().fetchData(get().renderRange?.end.page);
+
+    let lastAvailableIndex =
+      get().renderRange?.end.maxIndex ?? data?.length ?? -1;
+
+    if (data) {
+      const lastItemIndex = data.findIndex((item) => item.id === lastItem.id);
+
+      lastAvailableIndex =
+        data
+          .slice(lastItemIndex + 1)
+          .findIndex(
+            (item) =>
+              !removedItemsIds.find(
+                (removedItemId) => item.id === removedItemId
+              )
+          ) +
+        lastItemIndex +
+        1;
+    }
+
+    const lastAvailableItem =
+      lastAvailableIndex > 0 ? data?.[lastAvailableIndex] : null;
+
+    set({ removedItemsIds });
+
+    let renderRange = get().renderRange;
+
+    if (!renderRange) {
+      await get().renderItems();
+      return;
+    }
+
+    renderRange = {
+      start: {
+        ...renderRange.start,
+      },
+      end: {
+        ...renderRange.end,
+      },
+    };
+
+    renderedItems = renderedItems.filter(
+      (item) => !removedItemsIds.find((removedId) => removedId === item.id)
+    );
+
+    const firstElement = renderedItems[0];
+    let newStartIndex: number | null = null;
+
+    if (!firstElement) {
+      const data = await get().fetchData(renderRange.end.page);
+
+      if (data) {
+        newStartIndex = data.findIndex(
+          (item) => item.id === lastAvailableItem?.id
+        );
+
+        renderedItems = [
+          ...renderedItems,
+          ...data.slice(newStartIndex, newStartIndex + get().renderSize),
+        ];
+      }
+
+      renderRange.start.index = newStartIndex ?? 0;
+      renderRange.start.maxIndex = data && data.length;
+      renderRange.end.index = renderRange.start.index + get().renderSize;
+      renderRange.end.maxIndex = data && data.length;
+      renderRange.end.page = renderRange.start.page;
+    } else {
+      await Promise.all(
+        [renderRange.start.page, renderRange.end.page].map(async (page) => {
+          if (newStartIndex !== null || !renderRange) {
+            return;
+          }
+
+          const data = await get().fetchData(page);
+
+          if (!data) {
+            return;
+          }
+
+          const firstElementIndex = data.findIndex(
+            (item) => item.id === firstElement.id
+          );
+
+          if (firstElementIndex < 0) {
+            return;
+          }
+
+          newStartIndex = firstElementIndex;
+
+          const stayedLastIndex = newStartIndex + renderedItems.length;
+          const neededLastIndex =
+            stayedLastIndex + get().renderSize - renderedItems.length;
+
+          renderedItems = [
+            ...renderedItems,
+            ...data.slice(stayedLastIndex, neededLastIndex),
+          ];
+
+          renderRange.start.index = newStartIndex;
+          renderRange.start.maxIndex = data.length;
+          renderRange.start.page = page;
+          renderRange.end.page = page;
+          renderRange.end.index = renderRange.start.index + get().renderSize;
+          renderRange.end.maxIndex = data.length;
+        })
+      );
+    }
+
+    let passedData: RecipeData[] = [];
+
+    [renderRange, passedData] = await adjustRange(
+      renderRange,
+      'forward',
+      get().fetchData
+    );
+
+    const lackCount = get().renderSize - renderedItems.length;
+
+    if (lackCount) {
+      renderedItems = [...renderedItems, ...passedData.slice(-lackCount)];
+    }
+
+    set({ renderRange, renderedItems });
   },
 }));
 
