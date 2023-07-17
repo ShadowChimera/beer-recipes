@@ -47,7 +47,7 @@ const useStore = create<StoreState>((set, get) => ({
 
     const data = await get().fetchDataWithoutUpdate(page);
 
-    const isOutOfRange = !!data;
+    const isOutOfRange = !data;
 
     set({ page, data, isOutOfRange });
     return data;
