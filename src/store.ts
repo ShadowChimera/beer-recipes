@@ -145,15 +145,6 @@ const useStore = create<StoreState>((set, get) => ({
       get().fetchData
     );
 
-    // if (
-    //   renderRange.start.index === newRenderRange.start.index &&
-    //   renderRange.start.page === newRenderRange.start.page &&
-    //   renderRange.end.index === newRenderRange.end.index &&
-    //   renderRange.end.page === newRenderRange.end.page
-    // ) {
-    //   return;
-    // }
-
     set({
       renderRange: newRenderRange,
       renderedItems: newItems,
@@ -326,15 +317,7 @@ const pushRange: (
   const indexStart = range.start.index;
   const indexEnd = range.end.index;
 
-  console.log('(pushRange) beginning items:', items);
-  console.log('(pushRange) beginning range:', JSON.stringify(range));
-
   range = pushRangeIndexes(range, pushSize, direction);
-
-  console.log(
-    '(pushRange<-pushRangeIndexes) pushed range:',
-    JSON.stringify(range)
-  );
 
   let stayedRangeIndexStart = isForward ? pushSize : 0;
   let stayedRangeIndexEnd = isForward ? items.length : items.length - pushSize;
@@ -350,8 +333,6 @@ const pushRange: (
       ? data.slice(indexEnd, range.end.index)
       : data.slice(range.start.index > 0 ? range.start.index : 0, indexStart);
   }
-
-  console.log('(pushRange) newItems:', newItems);
 
   const [adjustedRange, passedData] = await adjustRange(
     range,
@@ -377,21 +358,11 @@ const pushRange: (
     ...stayedItems.slice(stayedRangeIndexStart, stayedRangeIndexEnd),
   ];
 
-  console.log('(pushRange) stayedRangeItems:', stayedItems);
-
-  console.log(
-    '(pushRange<-adjustRange) adjustedRange:',
-    JSON.stringify(adjustedRange)
-  );
-  console.log('(pushRange<-adjustRange) passedData:', passedData);
-
   range = adjustedRange;
 
   items = isForward
     ? [...stayedItems, ...newItems, ...passedData]
     : [...passedData, ...newItems, ...stayedItems];
-
-  console.log('(pushRange) final items:', items);
 
   await fetchData(isForward ? range.end.page : range.start.page);
 
