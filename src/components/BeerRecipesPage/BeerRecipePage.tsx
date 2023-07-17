@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import classNames from 'classnames';
+import { CSSTransition } from 'react-transition-group';
 import { RecipeData } from '../../api/beerRecipesApi';
 import useStore from '../../store';
 
@@ -11,18 +12,32 @@ import Method from './components/Method';
 import FoodPairing from './components/FoodPairing';
 
 export interface BeerRecipePageProps {
-  id: number;
-  onClose: () => void;
+  id?: number;
+  onClose?: () => void;
+  className?: string;
 }
 
-const BeerRecipePage = ({ id, onClose }: BeerRecipePageProps) => {
+const BeerRecipePage = ({
+  id,
+  onClose,
+  className: customClassName,
+}: BeerRecipePageProps) => {
   const [data, setData] = useState<RecipeData | null>(null);
 
   const fetchData = useStore((state) => state.fetchDataWithoutUpdate);
 
   useEffect(() => {
+    if (!id) {
+      return;
+    }
+
     const fetch = async () => {
       const data = await fetchData();
+
+      if (!data) {
+        return;
+      }
+
       setData(data?.find((item) => item.id === id) ?? null);
     };
 
@@ -33,28 +48,44 @@ const BeerRecipePage = ({ id, onClose }: BeerRecipePageProps) => {
     return <></>;
   }
 
-  console.log(data);
-
   return (
-    <div className={classNames('fixed inset-0 z-[50] bg-white overflow-auto')}>
-      <Header onClose={onClose} />
+    <CSSTransition
+      in={!!id}
+      timeout={300}
+      classNames={{
+        enterActive: 'opacity-100 visible z-50',
+        enterDone: 'opacity-100 visible z-50',
+        exitActive: 'opacity-0 visible z-50',
+        exitDone: 'opacity-0 -z-50 invisible',
+      }}
+    >
       <div
         className={classNames(
-          'max-w-[72ch] mx-auto p-4 text-neutral-900',
-          'lg:max-w-[65rem]'
+          customClassName,
+          'fixed inset-0 z-[50] bg-white overflow-auto transition-opacity duration-300'
         )}
       >
-        <div className={classNames('lg:grid lg:grid-cols-2 lg:gap-16')}>
-          <Preview data={data} />
-          <Stats data={data} />
-        </div>
-        <div className={classNames('lg:grid lg:grid-cols-3 lg:gap-4 lg:mt-4')}>
-          <Ingredients data={data} />
-          <Method data={data} />
-          <FoodPairing data={data} />
+        <Header onClose={onClose} />
+        <div
+          className={classNames(
+            'max-w-[72ch] mx-auto p-4 text-neutral-900',
+            'lg:max-w-[65rem]'
+          )}
+        >
+          <div className={classNames('lg:grid lg:grid-cols-2 lg:gap-16')}>
+            <Preview data={data} />
+            <Stats data={data} />
+          </div>
+          <div
+            className={classNames('lg:grid lg:grid-cols-3 lg:gap-4 lg:mt-4')}
+          >
+            <Ingredients data={data} />
+            <Method data={data} />
+            <FoodPairing data={data} />
+          </div>
         </div>
       </div>
-    </div>
+    </CSSTransition>
   );
 };
 

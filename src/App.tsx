@@ -16,11 +16,13 @@ function App() {
 
   return (
     <>
-      {openedRecipeId !== null && (
-        <BeerRecipePage id={openedRecipeId} onClose={handleRecipeClose} />
-      )}
+      <BeerRecipePage
+        id={openedRecipeId ?? undefined}
+        onClose={handleRecipeClose}
+      />
+
       <div
-        className={classNames({
+        className={classNames('max-h-screen overflow-auto', {
           'overflow-hidden relative z-[1]': openedRecipeId !== null,
         })}
       >
