@@ -4,7 +4,11 @@ import useStore from '../store';
 
 import useScrollObservation from '../hooks/useScrollObservation';
 
-const RecipesList = () => {
+export interface RecipesListProps {
+  onRecipeOpen?: (itemId: number) => void;
+}
+
+const RecipesList = ({ onRecipeOpen: onItemOpen }: RecipesListProps) => {
   const [isStart, setIsStart] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +77,10 @@ const RecipesList = () => {
     setIsLoading(false);
   };
 
+  const handleRecipeOpen = (itemId: number) => {
+    onItemOpen?.(itemId);
+  };
+
   const handleItemSelect = (itemId: number) => {
     setSelectedItemsIds((prevSelectedItems) => {
       const isSelected = prevSelectedItems.find(
@@ -125,6 +133,7 @@ const RecipesList = () => {
             key={item.id}
             style={{ height: `${100 / renderPartSize}vh` }}
             className={classNames('p-4 py-8 flex')}
+            onClick={() => handleRecipeOpen(item.id)}
             onContextMenu={(e: React.MouseEvent<HTMLDivElement>) => {
               e.preventDefault();
 

@@ -36,7 +36,7 @@ const BeerRecipePage = ({ id, onClose }: BeerRecipePageProps) => {
   console.log(data);
 
   return (
-    <div className={classNames('absolute inset-0')}>
+    <div className={classNames('fixed inset-0 z-[50] bg-white overflow-auto')}>
       <Header onClose={onClose} />
       <div
         className={classNames(
