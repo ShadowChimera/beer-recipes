@@ -100,7 +100,6 @@ const useStore = create<StoreState>((set, get) => ({
     let renderRange = get().renderRange;
     let renderedItems: RecipeData[] = [];
 
-    // TODO: if renderRange already exists (not important)
     if (!renderRange) {
       renderRange = {
         start: {
@@ -114,41 +113,20 @@ const useStore = create<StoreState>((set, get) => ({
           maxIndex: data.length,
         },
       };
-
-      renderedItems = data.slice(
-        renderRange.start.index,
-        renderRange.end.index
-      );
-
-      if (
-        renderRange.end.maxIndex &&
-        renderRange.end.index > renderRange.end.maxIndex
-      ) {
-        do {
-          const nextPage = renderRange.end.page + 1;
-          const nextData = await get().fetchDataWithoutUpdate(nextPage);
-
-          if (!nextData) {
-            renderRange.end.index = renderRange.end.maxIndex;
-            break;
           }
 
-          renderRange.end.page = nextPage;
-          renderRange.end.index -= renderRange.end.maxIndex ?? 0;
-          renderRange.end.maxIndex = nextData.length;
+    renderedItems = data.slice(renderRange.start.index, renderRange.end.index);
 
-          renderedItems = [
-            ...renderedItems,
-            ...nextData.slice(0, renderRange.end.index),
-          ];
-        } while (renderRange.end.index <= renderRange.end.maxIndex);
-      }
+    let passedData: RecipeData[] = [];
+    [renderRange, passedData] = await adjustRange(
+      renderRange,
+      'forward',
+      get().fetchData
+    );
 
-      // console.log('newRenderRange', renderRange);
-      // console.log('renderedItems', renderedItems);
+    renderedItems = [...renderedItems, ...passedData];
 
       set({ renderRange, renderedItems });
-    }
   },
 
   pushRender: async (direction) => {
