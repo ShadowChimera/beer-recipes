@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CSSTransition } from 'react-transition-group';
 import classNames from 'classnames';
 import useStore from '../store';
 
@@ -106,14 +107,43 @@ const RecipesList = ({ onRecipeOpen: onItemOpen }: RecipesListProps) => {
 
   return (
     <div>
-      {selectedItemsIds.length !== 0 && (
+      <CSSTransition
+        in={selectedItemsIds.length !== 0}
+        timeout={150}
+        classNames={{
+          enterActive: 'opacity-100 visible z-50',
+          enterDone: 'opacity-100 visible z-50',
+          exitActive: 'opacity-0 visible z-50',
+          exitDone: 'opacity-0 -z-50 invisible',
+        }}
+        mountOnEnter
+      >
         <div
           className={classNames(
-            'fixed inset-x-0 top-0 z-50 flex justify-between p-4 bg-white shadow-md'
+            'fixed inset-x-0 top-0 z-50 flex justify-between p-4 bg-white shadow-md transition-opacity duration-150'
           )}
         >
-          <span>Selected items count: {selectedItemsIds.length}</span>
-          <button onClick={() => void handleRemoveItems()}>Remove</button>
+          <div
+            className={classNames(
+              'flex justify-between items-center max-w-[72ch] w-full px-4 mx-auto'
+            )}
+          >
+            <span className={classNames('text-lg')}>
+              Selected items count: {selectedItemsIds.length}
+            </span>
+            <button
+              onClick={() => void handleRemoveItems()}
+              className={classNames(
+                'px-4 py-2 rounded bg-black border border-opacity-50 bg-opacity-0 transition-colors',
+                'hover:bg-opacity-5',
+                'active:bg-opacity-10'
+              )}
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      </CSSTransition>
         </div>
       )}
       <div className={classNames('max-w-[72ch] mx-auto')}>
