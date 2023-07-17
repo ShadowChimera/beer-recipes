@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CSSTransition } from 'react-transition-group';
 import classNames from 'classnames';
 import useStore from '../store';
+import { LoadingIcon } from './icons';
 
 import useScrollObservation from '../hooks/useScrollObservation';
 
@@ -144,6 +145,9 @@ const RecipesList = ({ onRecipeOpen: onItemOpen }: RecipesListProps) => {
           </div>
         </div>
       </CSSTransition>
+      {isLoading && renderedItems.length > 0 && (
+        <div className={classNames('w-fit mx-auto')}>
+          <LoadingIcon />
         </div>
       )}
       <div className={classNames('max-w-[72ch] mx-auto')}>
@@ -218,7 +222,11 @@ const RecipesList = ({ onRecipeOpen: onItemOpen }: RecipesListProps) => {
           );
         })}
       </div>
-      {isLoading && 'Loading...'}
+      {isLoading && (
+        <div className={classNames('w-fit mx-auto')}>
+          <LoadingIcon />
+        </div>
+      )}
     </div>
   );
 };
