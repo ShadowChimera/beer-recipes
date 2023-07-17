@@ -116,45 +116,88 @@ const RecipesList = ({ onRecipeOpen: onItemOpen }: RecipesListProps) => {
           <button onClick={() => void handleRemoveItems()}>Remove</button>
         </div>
       )}
-      {renderedItems.map((item, index) => {
-        let ref;
+      <div className={classNames('max-w-[72ch] mx-auto')}>
+        {renderedItems.map((item, index) => {
+          let ref;
 
-        if (index === renderedItems.length - 1) {
-          ref = lastElementRef;
-        }
+          if (index === renderedItems.length - 1) {
+            ref = lastElementRef;
+          }
 
-        if (index === 0) {
-          ref = firstElementRef;
-        }
+          if (index === 0) {
+            ref = firstElementRef;
+          }
 
-        return (
-          <div
-            ref={ref}
-            key={item.id}
-            style={{ height: `${100 / renderPartSize}vh` }}
-            className={classNames('p-4 py-8 flex')}
-            onClick={() => handleRecipeOpen(item.id)}
-            onContextMenu={(e: React.MouseEvent<HTMLDivElement>) => {
-              e.preventDefault();
-
-              handleItemSelect(item.id);
-            }}
-          >
+          return (
             <div
-              className={classNames('p-4 border flex items-center flex-grow', {
-                'border-sky-500': selectedItemsIds.find(
-                  (selectedItemId) => selectedItemId === item.id
-                ),
-              })}
+              ref={ref}
+              key={item.id}
+              style={{ height: `${100 / renderPartSize}vh` }}
+              className={classNames('p-4 py-2 flex')}
             >
-              {item.id} -- {item.name}
+              <article
+                onClick={() => handleRecipeOpen(item.id)}
+                onContextMenu={(e: React.MouseEvent<HTMLDivElement>) => {
+                  e.preventDefault();
+
+                  handleItemSelect(item.id);
+                }}
+                className={classNames(
+                  'flex justify-between gap-8 bg-gray-400 bg-opacity-0 p-2 border rounded-md flex-grow transition-colors duration-100 cursor-pointer',
+                  'hover:bg-opacity-5',
+                  'lg:gap-16',
+                  {
+                    'border-sky-500': selectedItemsIds.find(
+                      (selectedItemId) => selectedItemId === item.id
+                    ),
+                  }
+                )}
+              >
+                <div
+                  className={classNames(
+                    'flex-1 w-full flex-shrink flex flex-col'
+                  )}
+                >
+                  <h2
+                    className={classNames('text-xl font-medium leading-6 mb-1')}
+                  >
+                    {item.name}
+                  </h2>
+                  <p className={classNames('text-sm font-medium opacity-50')}>
+                    {item.tagline}
+                  </p>
+                  <p className={classNames('hidden flex-1 mt-2', 'lg:block')}>
+                    {truncate(item.description, 100)}
+                  </p>
+                  <p
+                    className={classNames(
+                      'flex-1 flex flex-col justify-end text-xs underline',
+                      'lg:flex-initial'
+                    )}
+                  >
+                    {item.contributed_by}
+                  </p>
+                </div>
+                <img
+                  src={item.image_url}
+                  alt="Image preview"
+                  className={classNames('h-full')}
+                />
+              </article>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
       {isLoading && 'Loading...'}
     </div>
   );
 };
 
 export default RecipesList;
+
+const truncate = (text: string, maxLength = 300, end = '...') => {
+  text = text.slice(0, maxLength);
+  text = text.slice(0, text.lastIndexOf(' '));
+
+  return `${text}${end}`;
+};
