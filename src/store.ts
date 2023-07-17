@@ -406,7 +406,7 @@ const adjustRange: (
   const checkOverflowStart = (rangeItem: RenderRangeItem) =>
     rangeItem.index < 0;
   const checkOverflowEnd = (rangeItem: RenderRangeItem) =>
-    !!rangeItem.maxIndex && rangeItem.index >= rangeItem.maxIndex;
+    rangeItem.maxIndex !== null && rangeItem.index >= rangeItem.maxIndex;
 
   let [rangeStart, passedDataStart] = await adjustRangeItem(
     range.start,
@@ -423,7 +423,8 @@ const adjustRange: (
     range.end,
     fetchData,
     (rangeItem) => rangeItem.index <= 0,
-    (rangeItem) => !!rangeItem.maxIndex && rangeItem.index > rangeItem.maxIndex,
+    (rangeItem) =>
+      rangeItem.maxIndex !== null && rangeItem.index > rangeItem.maxIndex,
     async (extraRangeSize) => {
       rangeStart.index -= extraRangeSize;
       [rangeStart, passedDataStart] = await adjustRangeItem(
@@ -471,8 +472,8 @@ const adjustRangeItem: (
 
   rangeItem = { ...rangeItem };
 
-  while (isOverflowStart || (isOverflowEnd && rangeItem.maxIndex)) {
-    if (isOverflowEnd && !rangeItem.maxIndex) {
+  while (isOverflowStart || (isOverflowEnd && rangeItem.maxIndex !== null)) {
+    if (isOverflowEnd && rangeItem.maxIndex === null) {
       break;
     }
 
@@ -483,7 +484,7 @@ const adjustRangeItem: (
       if (isOverflowStart) {
         await onDataOverflow?.(-rangeItem.index);
         rangeItem.index = 0;
-      } else if (isOverflowEnd && rangeItem.maxIndex) {
+      } else if (isOverflowEnd && rangeItem.maxIndex !== null) {
         await onDataOverflow?.(rangeItem.index - rangeItem.maxIndex);
         rangeItem.index = rangeItem.maxIndex;
       }
